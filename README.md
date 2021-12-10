@@ -7,7 +7,7 @@ The module is fairly self-contained and only reauires an external HashiCorp Vaul
 
 # Prereqs.
 1. gcloud - Having gcloud installed and being authenticated on the machine which will execute the Terraform configuration. Otherwise you will need to modify the provider.tf and feed your secrets to the GCP provider ressource. 
-2. HashiCorp Vault - Certificates in this module will be generated and sourced from HashiCorp Vault. Your GCP instances will need to be able to communicate to Vault. Recommendation: Spin up a HCP "dev" cluster. A module for that can be found here: https://github.com/pschulz1/HCP-Vault-Dev
+2. HashiCorp Vault - Certificates in this module will be generated and sourced from HashiCorp Vault. Your GCP instances will need to be able to communicate to Vault. Recommendation: Spin up a HCP "dev" cluster. A module for that can be found here: https://github.com/pschulz1/hcp-vault-dev
 3. SSH key pair - For now this is external to the module. 
 
 openssl genrsa -out key.pem 2048<br/>
