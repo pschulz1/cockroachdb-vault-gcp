@@ -10,7 +10,7 @@ The module is fairly self-contained and only reauires an external HashiCorp Vaul
 2. HashiCorp Vault - Certificates in this module will be generated and sourced from HashiCorp Vault. Your GCP instances will need to be able to communicate to Vault. Recommendation: Spin up a HCP "dev" cluster. A module for that can be found here: https://github.com/pschulz1/HCP-Vault-Dev
 3. SSH key pair - For now this is external to the module. 
 
-openssl genrsa -out key.pem 2048
+openssl genrsa -out key.pem 2048<br/>
 openssl rsa -in key.pem -outform PEM -pubout -out public.pem
 
 # Tunables
