@@ -17,7 +17,7 @@ The module is almost self-contained and only requires an external HashiCorp Vaul
 openssl genrsa -out key.pem 2048<br/>
 openssl rsa -in key.pem -outform PEM -pubout -out public.pem
 
-## Tunables
+## Tunable Variables
 
 The following Terraform variables *must* be set in order to ensure functionality of the module
 
