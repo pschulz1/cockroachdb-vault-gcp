@@ -40,3 +40,6 @@ The following Terraform variables *must* be set in order to ensure functionality
    export VAULT_TOKEN=<TOKEN>
 4. terraform init
 5. terraform apply -auto-approve
+6. terraform will output the load-balancer IP to connect to the UI <IP>:8080
+
+NOTE: Your browser will alarm you because of the fact that the certificates are signed by an unknown CA (Vault)!
