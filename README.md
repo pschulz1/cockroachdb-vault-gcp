@@ -5,7 +5,8 @@ The module is almost self-contained and only requires an external HashiCorp Vaul
 
 ## Architecture
 
-<Graphic TBD>
+TBD
+
 
 ## Prerequisites
 
