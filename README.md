@@ -1,13 +1,13 @@
-# ABOUT
+## ABOUT
 
 This module is intended as an example of how a self-hosted CockroachDB cluster could be provisioned on GCP and integrated with HashiCorp Vault.
 The module is almost self-contained and only requires an external HashiCorp Vault to be available. All the Vault related configuration is part of the module. 
 
-# Architecture
+## Architecture
 
 <Graphic TBD>
 
-# Prerequisites
+## Prerequisites
 
 1. Terraform - Download and install https://learn.hashicorp.com/tutorials/terraform/install-cli
 2. gcloud - Having gcloud installed and being authenticated on the machine which will execute the Terraform configuration. Otherwise you will need to modify the provider.tf and feed your secrets to the GCP provider resource. 
@@ -17,7 +17,7 @@ The module is almost self-contained and only requires an external HashiCorp Vaul
 openssl genrsa -out key.pem 2048<br/>
 openssl rsa -in key.pem -outform PEM -pubout -out public.pem
 
-# Tunables
+## Tunables
 
 The following Terraform variables *must* be set in order to ensure functionality of the module
 
@@ -31,11 +31,11 @@ The following Terraform variables *must* be set in order to ensure functionality
 * vault_version - Desired CockroachDB Version
 * vault_addr - External HCP Vault address
 
-# Usage
+## Usage
 
 1. Install gcloud and authenticate via "gcloud auth application-default login" 
 2. Obtain token and vault address from target HCP Vault cluster
-3. export VAULT_ADDR=<public or internally on GCP available >
+3. export VAULT_ADDR=<public or internally on GCP available>
    export VAULT_TOKEN=<TOKEN>
 4. terraform init
 5. terraform apply -auto-approve
