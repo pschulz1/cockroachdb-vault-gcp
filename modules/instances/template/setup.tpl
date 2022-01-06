@@ -63,7 +63,7 @@ sudo cp /vault/vault /usr/local/bin/
 logger "Writing templates and agent config"
 
 sudo tee /vault/agent.hcl <<EOF
-exit_after_auth = true
+exit_after_auth = false
 pid_file = "./pidfile"
 
 auto_auth {
