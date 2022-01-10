@@ -93,16 +93,28 @@ vault {
 template {
   source      = "/vault/node_cert.tmpl"
   destination = "/vault/node.crt"
+  create_dest_dirs = true
+  backup = true
+  perms = 0700
+  command = "pkill -SIGHUP -x crdb"
 }
 
 template {
   source      = "/vault/node_key.tmpl"
   destination = "/vault/node.key"
+  create_dest_dirs = true
+  backup = true
+  perms = 0700
+  command = "pkill -SIGHUP -x crdb"
 }
 
 template {
   source      = "/vault/ca_cert.tmpl"
   destination = "/vault/ca.crt"
+  create_dest_dirs = true
+  backup = true
+  perms = 0700
+  command = "pkill -SIGHUP -x crdb"
 }
 
 # template {
@@ -113,21 +125,37 @@ template {
 template {
   source      = "/vault/user_cert.tmpl"
   destination = "/vault/client.root.crt"
+  create_dest_dirs = true
+  backup = true
+  perms = 0700
+  command = "pkill -SIGHUP -x crdb"
 }
 
 template {
   source      = "/vault/user_key.tmpl"
   destination = "/vault/client.root.key"
+  create_dest_dirs = true
+  backup = true
+  perms = 0700
+  command = "pkill -SIGHUP -x crdb"
 }
 
 template {
   source      = "/vault/ui_cert.tmpl"
   destination = "/vault/ui.crt"
+  create_dest_dirs = true
+  backup = true
+  perms = 0700
+  command = "pkill -SIGHUP -x crdb"
 }
 
 template {
   source      = "/vault/ui_key.tmpl"
   destination = "/vault/ui.key"
+  create_dest_dirs = true
+  backup = true
+  perms = 0700
+  command = "pkill -SIGHUP -x crdb"
 }
 EOF
 
@@ -177,9 +205,11 @@ logger "Executing Vault Agent to fetch secrets"
 
 sudo /vault/vault agent -config=/vault/agent.hcl
 
-#################
+sudo chown -R crdb:crdb /vault/*
+
+##################
 # Set up CRDB user
-#################
+##################
 
 logger "Adding CockroachDB user"
 
@@ -210,7 +240,6 @@ sudo chown crdb:crdb /usr/local/lib/cockroach/libgeos_c.so
 
 sudo mkdir -pm 0755 /etc/crdb.d
 sudo mkdir -pm 0755 /mnt/disks/persistent_storage/crdb/data
-# sudo mkdir -pm 0755 /opt/crdb/data
 sudo chown crdb:crdb /mnt/disks/persistent_storage/crdb/data
 
 ###################################################
@@ -229,17 +258,16 @@ export VAULT_ADDR=${vault_addr}
 echo $(cat /vault/aes-256.key) | base64 > /vault/encoded.txt
 vault kv put -namespace=admin secret/crdb/ encryption_key=$(cat /vault/encoded.txt)
 
-logger "Modifying permissions for certificate files"
+logger "Modifying permissions for encryption key"
 
-sudo chown -R crdb:crdb /vault/*
-sudo chmod 700 /vault/node.*
-sudo chmod 700 /vault/client.*
-sudo chmod 700 /vault/ca.crt
-sudo chmod 700 /vault/ui.*
+# sudo chmod 700 /vault/node.*
+# sudo chmod 700 /vault/client.*
+# sudo chmod 700 /vault/ca.crt
+# sudo chmod 700 /vault/ui.*
 sudo chmod 700 /vault/aes-256.key
 
 #############################
-# Create crdb Systemd Service
+# Create crdb systemd Service
 #############################
 
 logger "Registering CockroachDB daemon"
