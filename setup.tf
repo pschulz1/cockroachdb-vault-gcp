@@ -76,10 +76,10 @@ resource "null_resource" "cluster_init" {
   provisioner "remote-exec" {
     inline = [
       "sleep 90",
-      "sudo -u crdb cockroach init --certs-dir=/vault --host=crdb-node-1",
-      "sudo -u crdb cockroach sql --certs-dir=/vault -e 'SET CLUSTER SETTING cluster.organization = ${var.org}'",
-      "sudo -u crdb cockroach sql --certs-dir=/vault -e 'SET CLUSTER SETTING enterprise.license = \"${var.license}\"'",
-      "sudo -u crdb cockroach sql --certs-dir=/vault -e 'CREATE USER demo WITH PASSWORD 'cockroach';'",
+      "sudo -u cockroach cockroach init --certs-dir=/vault --host=crdb-node-1",
+      "sudo -u cockroach cockroach sql --certs-dir=/vault -e 'SET CLUSTER SETTING cluster.organization = ${var.org}'",
+      "sudo -u cockroach cockroach sql --certs-dir=/vault -e 'SET CLUSTER SETTING enterprise.license = \"${var.license}\"'",
+      "sudo -u cockroach cockroach sql --certs-dir=/vault -e 'CREATE USER demo WITH PASSWORD 'cockroach';'",
     ]
   }
 }
