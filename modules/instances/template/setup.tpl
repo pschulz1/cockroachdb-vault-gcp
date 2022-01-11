@@ -93,10 +93,9 @@ vault {
 template {
   source      = "/vault/node_cert.tmpl"
   destination = "/vault/node.crt"
-  create_dest_dirs = true
   backup = true
   perms = 0700
-  command = "pkill -SIGHUP -x crdb"
+  command = "pkill -SIGHUP -x cockroach"
 }
 
 template {
@@ -105,16 +104,15 @@ template {
   create_dest_dirs = true
   backup = true
   perms = 0700
-  command = "pkill -SIGHUP -x crdb"
+  command = "pkill -SIGHUP -x cockroach"
 }
 
 template {
   source      = "/vault/ca_cert.tmpl"
   destination = "/vault/ca.crt"
-  create_dest_dirs = true
   backup = true
   perms = 0700
-  command = "pkill -SIGHUP -x crdb"
+  command = "pkill -SIGHUP -x cockroach"
 }
 
 # template {
@@ -125,37 +123,33 @@ template {
 template {
   source      = "/vault/user_cert.tmpl"
   destination = "/vault/client.root.crt"
-  create_dest_dirs = true
   backup = true
   perms = 0700
-  command = "pkill -SIGHUP -x crdb"
+  command = "pkill -SIGHUP -x cockroach"
 }
 
 template {
   source      = "/vault/user_key.tmpl"
   destination = "/vault/client.root.key"
-  create_dest_dirs = true
   backup = true
   perms = 0700
-  command = "pkill -SIGHUP -x crdb"
+  command = "pkill -SIGHUP -x cockroach"
 }
 
 template {
   source      = "/vault/ui_cert.tmpl"
   destination = "/vault/ui.crt"
-  create_dest_dirs = true
   backup = true
   perms = 0700
-  command = "pkill -SIGHUP -x crdb"
+  command = "pkill -SIGHUP -x cockroach"
 }
 
 template {
   source      = "/vault/ui_key.tmpl"
   destination = "/vault/ui.key"
-  create_dest_dirs = true
   backup = true
   perms = 0700
-  command = "pkill -SIGHUP -x crdb"
+  command = "pkill -SIGHUP -x cockroach"
 }
 EOF
 
@@ -205,15 +199,13 @@ logger "Executing Vault Agent to fetch secrets"
 
 sudo /vault/vault agent -config=/vault/agent.hcl
 
-sudo chown -R crdb:crdb /vault/*
-
 ##################
 # Set up CRDB user
 ##################
 
 logger "Adding CockroachDB user"
 
-sudo useradd --system --home /etc/crdb.d --shell /bin/false crdb
+sudo useradd --system --home /etc/cockroach.d --shell /bin/false cockroach
 
 ############################
 # Install and configure crdb
@@ -230,17 +222,19 @@ sudo tar -xzf /tmp/cockroach-${crdb_version}.linux-amd64.tgz -C /tmp/
 sudo cp -i /tmp/cockroach-${crdb_version}.linux-amd64/cockroach /usr/local/bin/
 
 sudo chmod 0755 /usr/local/bin/cockroach
-sudo chown crdb:crdb /usr/local/bin/cockroach
+sudo chown cockroach:cockroach /usr/local/bin/cockroach
 
 sudo mkdir -p /usr/local/lib/cockroach
 sudo cp -i /tmp/cockroach-${crdb_version}.linux-amd64/lib/libgeos.so /usr/local/lib/cockroach/
 sudo cp -i /tmp/cockroach-${crdb_version}.linux-amd64/lib/libgeos_c.so /usr/local/lib/cockroach/
-sudo chown crdb:crdb /usr/local/lib/cockroach/libgeos.so
-sudo chown crdb:crdb /usr/local/lib/cockroach/libgeos_c.so 
+sudo chown cockroach:cockroach /usr/local/lib/cockroach/libgeos.so
+sudo chown cockroach:cockroach /usr/local/lib/cockroach/libgeos_c.so 
 
-sudo mkdir -pm 0755 /etc/crdb.d
-sudo mkdir -pm 0755 /mnt/disks/persistent_storage/crdb/data
-sudo chown crdb:crdb /mnt/disks/persistent_storage/crdb/data
+sudo mkdir -pm 0755 /etc/cockroach.d
+sudo mkdir -pm 0755 /mnt/disks/persistent_storage/cockroach/data
+sudo chown cockroach:cockroach /mnt/disks/persistent_storage/cockroach/data
+
+sudo chown -R cockroach:cockroach /vault/*
 
 ###################################################
 # Generating Encryption Key and copying it to Vault
@@ -266,34 +260,34 @@ logger "Modifying permissions for encryption key"
 # sudo chmod 700 /vault/ui.*
 sudo chmod 700 /vault/aes-256.key
 
-#############################
-# Create crdb systemd Service
-#############################
+##################################
+# Create cockroach systemd service
+##################################
 
 logger "Registering CockroachDB daemon"
 
-sudo sudo touch /etc/systemd/system/crdb.service
-sudo chmod 0664 /etc/systemd/system/crdb.service
-sudo tee /etc/systemd/system/crdb.service <<EOF
+sudo sudo touch /etc/systemd/system/cockroach.service
+sudo chmod 0664 /etc/systemd/system/cockroach.service
+sudo tee /etc/systemd/system/cockroach.service <<EOF
 [Unit]
-Description=crdb
+Description=cockroach
 Requires=network-online.target
 After=network-online.target
 [Service]
 Restart=on-failure
-ExecStart=/usr/local/bin/cockroach start --join=crdb-node-1:26257,crdb-node-2:26257,crdb-node-3:26257 --store=/mnt/disks/persistent_storage/crdb/data  --locality=region=${region},zone=${zone} --certs-dir=/vault --enterprise-encryption=path=/mnt/disks/persistent_storage/crdb/data,key=/vault/aes-256.key,old-key=plain
+ExecStart=/usr/local/bin/cockroach start --join=crdb-node-1:26257,crdb-node-2:26257,crdb-node-3:26257 --store=/mnt/disks/persistent_storage/cockroach/data  --locality=region=${region},zone=${zone} --certs-dir=/vault --enterprise-encryption=path=/mnt/disks/persistent_storage/cockroach/data,key=/vault/aes-256.key,old-key=plain
 ExecReload=/bin/kill -HUP $MAINPID
 KillSignal=SIGTERM
-User=crdb
-Group=crdb
+User=cockroach
+Group=cockroach
 [Install]
 WantedBy=multi-user.target
 EOF
 
 logger "Starting CockroachDB daemon"
 
-sudo systemctl enable crdb
-sudo systemctl start crdb
-sudo systemctl status crdb
+sudo systemctl enable cockroach
+sudo systemctl start cockroach
+sudo systemctl status cockroach
 
 logger "Completed Configuration of Cockroach Node, not initialized yet!"
