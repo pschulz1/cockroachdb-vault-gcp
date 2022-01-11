@@ -47,6 +47,14 @@ sudo systemctl enable ntp.service
 
 logger "Completed Installing Prerequisites"
 
+##################
+# Set up CRDB user
+##################
+
+logger "Adding CockroachDB user"
+
+sudo useradd --system --home /etc/cockroach.d --shell /bin/false cockroach
+
 ###########################################
 # Vault Integration - Sourcing Certificates
 ###########################################
@@ -59,6 +67,7 @@ wget -P /vault https://releases.hashicorp.com/vault/${vault_version}/vault_${vau
 
 sudo unzip -o /vault/vault_${vault_version}_linux_amd64.zip -d /vault
 sudo cp /vault/vault /usr/local/bin/
+sudo chown cockroach:cockroach /usr/local/bin/vault
 
 logger "Writing templates and agent config"
 
@@ -95,7 +104,7 @@ template {
   destination = "/vault/node.crt"
   backup = true
   perms = 0700
-  command = "pkill -SIGHUP -x cockroach"
+  # command = "pkill -SIGHUP -x cockroach"
 }
 
 template {
@@ -104,7 +113,7 @@ template {
   create_dest_dirs = true
   backup = true
   perms = 0700
-  command = "pkill -SIGHUP -x cockroach"
+  # command = "pkill -SIGHUP -x cockroach"
 }
 
 template {
@@ -112,20 +121,15 @@ template {
   destination = "/vault/ca.crt"
   backup = true
   perms = 0700
-  command = "pkill -SIGHUP -x cockroach"
+  # command = "pkill -SIGHUP -x cockroach"
 }
-
-# template {
-#   source      = "/vault/ear.tmpl"
-#   destination = "/vault/ear.key"
-# }
 
 template {
   source      = "/vault/user_cert.tmpl"
   destination = "/vault/client.root.crt"
   backup = true
   perms = 0700
-  command = "pkill -SIGHUP -x cockroach"
+  # command = "pkill -SIGHUP -x cockroach"
 }
 
 template {
@@ -133,7 +137,7 @@ template {
   destination = "/vault/client.root.key"
   backup = true
   perms = 0700
-  command = "pkill -SIGHUP -x cockroach"
+  # command = "pkill -SIGHUP -x cockroach"
 }
 
 template {
@@ -141,7 +145,7 @@ template {
   destination = "/vault/ui.crt"
   backup = true
   perms = 0700
-  command = "pkill -SIGHUP -x cockroach"
+  # command = "pkill -SIGHUP -x cockroach"
 }
 
 template {
@@ -149,7 +153,7 @@ template {
   destination = "/vault/ui.key"
   backup = true
   perms = 0700
-  command = "pkill -SIGHUP -x cockroach"
+  # command = "pkill -SIGHUP -x cockroach"
 }
 EOF
 
@@ -195,17 +199,11 @@ sudo tee /vault/ui_key.tmpl <<EOF
 {{ end }}
 EOF
 
+sudo chown -R cockroach:cockroach /vault/*
+
 logger "Executing Vault Agent to fetch secrets"
 
-sudo /vault/vault agent -config=/vault/agent.hcl
-
-##################
-# Set up CRDB user
-##################
-
-logger "Adding CockroachDB user"
-
-sudo useradd --system --home /etc/cockroach.d --shell /bin/false cockroach
+sudo -u cockroach vault agent -config=/vault/agent.hcl
 
 ############################
 # Install and configure crdb
@@ -233,8 +231,6 @@ sudo chown cockroach:cockroach /usr/local/lib/cockroach/libgeos_c.so
 sudo mkdir -pm 0755 /etc/cockroach.d
 sudo mkdir -pm 0755 /mnt/disks/persistent_storage/cockroach/data
 sudo chown cockroach:cockroach /mnt/disks/persistent_storage/cockroach/data
-
-sudo chown -R cockroach:cockroach /vault/*
 
 ###################################################
 # Generating Encryption Key and copying it to Vault
