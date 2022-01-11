@@ -9,13 +9,3 @@ resource "google_project_iam_member" "crdb" {
   role       = "roles/iam.serviceAccountTokenCreator"
   member     = "serviceAccount:${google_service_account.crdb.email}"
 }
-
-
-// resource "google_project_iam_binding" "crdb" {
-//   project = var.project_id
-//   role    = "roles/iam.serviceAccountTokenCreator"
-
-//   members = [
-//     "serviceAccount:${google_service_account.crdb.email}"
-//   ]
-// }

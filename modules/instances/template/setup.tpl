@@ -71,9 +71,9 @@ sudo chown cockroach:cockroach /usr/local/bin/vault
 
 logger "Writing templates and agent config"
 
-sudo tee /vault/agent.hcl <<EOF
-exit_after_auth = false
-pid_file = "./pidfile"
+sudo tee /vault/init_agent.hcl <<EOF
+exit_after_auth = true
+pid_file = "/vault/pidfile"
 
 auto_auth {
   method "gcp" {
@@ -102,58 +102,46 @@ vault {
 template {
   source      = "/vault/node_cert.tmpl"
   destination = "/vault/node.crt"
-  backup = true
   perms = 0700
-  # command = "pkill -SIGHUP -x cockroach"
 }
 
 template {
   source      = "/vault/node_key.tmpl"
   destination = "/vault/node.key"
-  create_dest_dirs = true
-  backup = true
   perms = 0700
-  # command = "pkill -SIGHUP -x cockroach"
+
 }
 
 template {
   source      = "/vault/ca_cert.tmpl"
   destination = "/vault/ca.crt"
-  backup = true
   perms = 0700
-  # command = "pkill -SIGHUP -x cockroach"
 }
 
 template {
   source      = "/vault/user_cert.tmpl"
   destination = "/vault/client.root.crt"
-  backup = true
   perms = 0700
-  # command = "pkill -SIGHUP -x cockroach"
 }
 
 template {
   source      = "/vault/user_key.tmpl"
   destination = "/vault/client.root.key"
-  backup = true
   perms = 0700
-  # command = "pkill -SIGHUP -x cockroach"
 }
 
 template {
   source      = "/vault/ui_cert.tmpl"
   destination = "/vault/ui.crt"
-  backup = true
+  # backup = true
   perms = 0700
-  # command = "pkill -SIGHUP -x cockroach"
 }
 
 template {
   source      = "/vault/ui_key.tmpl"
   destination = "/vault/ui.key"
-  backup = true
+  # backup = true
   perms = 0700
-  # command = "pkill -SIGHUP -x cockroach"
 }
 EOF
 
@@ -199,11 +187,11 @@ sudo tee /vault/ui_key.tmpl <<EOF
 {{ end }}
 EOF
 
-sudo chown -R cockroach:cockroach /vault/*
+sudo chown -R cockroach:cockroach /vault
 
 logger "Executing Vault Agent to fetch secrets"
 
-sudo -u cockroach vault agent -config=/vault/agent.hcl
+sudo -u cockroach vault agent -config=/vault/init_agent.hcl
 
 ############################
 # Install and configure crdb
@@ -238,7 +226,7 @@ sudo chown cockroach:cockroach /mnt/disks/persistent_storage/cockroach/data
 
 logger "Creating Encryption Key"
 
-cockroach gen encryption-key -s 128 /vault/aes-256.key
+sudo -u cockroach cockroach gen encryption-key -s 128 /vault/aes-256.key
 
 logger "Uploading Encryption Key to Vault"
 
@@ -246,7 +234,7 @@ export VAULT_TOKEN=$(cat /vault/vault-token)
 export VAULT_ADDR=${vault_addr}
 
 echo $(cat /vault/aes-256.key) | base64 > /vault/encoded.txt
-vault kv put -namespace=admin secret/crdb/ encryption_key=$(cat /vault/encoded.txt)
+sudo -u cockroach vault kv put -namespace=admin secret/crdb/ encryption_key=$(cat /vault/encoded.txt)
 
 logger "Modifying permissions for encryption key"
 
