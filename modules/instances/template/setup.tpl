@@ -100,6 +100,11 @@ vault {
 }
 
 template {
+  source      = "/vault/ear.tmpl"
+  destination = "/vault/ear.key"
+}
+
+template {
   source      = "/vault/node_cert.tmpl"
   destination = "/vault/node.crt"
   perms = 0700
@@ -143,6 +148,12 @@ template {
   # backup = true
   perms = 0700
 }
+EOF
+
+sudo tee /vault/ear.tmpl <<EOF
+{{ with secret "transit/export/encryption-key/crdb_ear/latest"}}
+{{ base64Decode (index .Data.keys "1") }}
+{{ end }}
 EOF
 
 sudo tee /vault/ca_cert.tmpl <<EOF
@@ -226,23 +237,27 @@ sudo chown cockroach:cockroach /mnt/disks/persistent_storage/cockroach/data
 
 logger "Creating Encryption Key"
 
-sudo -u cockroach cockroach gen encryption-key -s 128 /vault/aes-256.key
+sudo openssl rand -out /vault/final_ear.key 32
+sudo bash -c "tr -d '\n' < /vault/ear.key > /vault/ear_cleaned.key"
+sudo bash -c "cat /vault/ear_cleaned.key >> /vault/final_ear.key"
 
-logger "Uploading Encryption Key to Vault"
+# sudo rm /vault/ear_cleaned.key
+# sudo rm /vault/ear.key
 
-export VAULT_TOKEN=$(cat /vault/vault-token)
-export VAULT_ADDR=${vault_addr}
+logger "Setting permissions for encryption key"
 
-echo $(cat /vault/aes-256.key) | base64 > /vault/encoded.txt
-sudo -u cockroach vault kv put -namespace=admin secret/crdb/ encryption_key=$(cat /vault/encoded.txt)
+sudo chown cockroach:cockroach /vault/final_ear.key
+sudo chmod 700 /vault/final_ear.key
 
-logger "Modifying permissions for encryption key"
+# sudo -u cockroach cockroach gen encryption-key -s 128 /vault/aes-256.key
 
-# sudo chmod 700 /vault/node.*
-# sudo chmod 700 /vault/client.*
-# sudo chmod 700 /vault/ca.crt
-# sudo chmod 700 /vault/ui.*
-sudo chmod 700 /vault/aes-256.key
+# logger "Uploading Encryption Key to Vault"
+
+# export VAULT_TOKEN=$(cat /vault/vault-token)
+# export VAULT_ADDR=${vault_addr}
+
+# echo $(cat /vault/final_ear.key) | base64 > /vault/encoded.txt
+# sudo -u cockroach vault kv put -namespace=admin secret/crdb/ encryption_key=$(cat /vault/encoded.txt)
 
 ##################################
 # Create cockroach systemd service
@@ -259,9 +274,10 @@ Requires=network-online.target
 After=network-online.target
 [Service]
 Restart=on-failure
-ExecStart=/usr/local/bin/cockroach start --join=crdb-node-1:26257,crdb-node-2:26257,crdb-node-3:26257 --store=/mnt/disks/persistent_storage/cockroach/data  --locality=region=${region},zone=${zone} --certs-dir=/vault --enterprise-encryption=path=/mnt/disks/persistent_storage/cockroach/data,key=/vault/aes-256.key,old-key=plain
+ExecStart=/usr/local/bin/cockroach start --join=crdb-node-1:26257,crdb-node-2:26257,crdb-node-3:26257 --store=/mnt/disks/persistent_storage/cockroach/data  --locality=region=${region},zone=${zone} --certs-dir=/vault --enterprise-encryption=path=/mnt/disks/persistent_storage/cockroach/data,key=/vault/final_ear.key,old-key=plain
 ExecReload=/bin/kill -HUP $MAINPID
 KillSignal=SIGTERM
+TimeoutStopSec=60
 User=cockroach
 Group=cockroach
 [Install]

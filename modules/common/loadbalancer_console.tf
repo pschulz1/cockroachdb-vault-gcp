@@ -1,7 +1,7 @@
 resource "google_compute_forwarding_rule" "console" {
   name            = "crdb-lb-console"
   region          = var.region
-  port_range      = 8080
+  ports      = ["8080"]
   backend_service = google_compute_region_backend_service.main.id
 }
 

@@ -7,7 +7,7 @@ resource "google_compute_instance_group" "node1" {
   ]
 
   named_port {
-    name = "http"
+    name = "https"
     port = "8080"
   }
 
@@ -23,7 +23,7 @@ resource "google_compute_instance_group" "node2" {
   ]
 
   named_port {
-    name = "http"
+    name = "https"
     port = "8080"
   }
 
@@ -39,7 +39,7 @@ resource "google_compute_instance_group" "node3" {
   ]
 
   named_port {
-    name = "http"
+    name = "https"
     port = "8080"
   }
 

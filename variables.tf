@@ -1,5 +1,5 @@
 variable "project_id" {
-    default = ""
+    default = "patrick-schulz-332212"
     description = "GCP project ID"
 }
 variable "machine_type" {
@@ -20,7 +20,7 @@ variable "crdb_version" {
 }
 variable "node_id" {
     default = ""
-    description = "ID is set on module call"
+    description = "Will be used to as part of the host naming"
 }
 variable "network" {
     default = ""
@@ -34,23 +34,23 @@ variable "service_account" {
     default = "crdb-service-account"
 }
 variable "gce_ssh_user" {
-    default = ""
+    default = "patrick"
     description = "SSH user to be added to the instance"
 }
 variable "gce_ssh_pub_key_file" {
-    default = ""
+    default = "/Users/patrick/.ssh/gce_public_key.pub"
     description = "Path to SSH public key to be added into the instance"
 }
 variable "gce_ssh_priv_key_file" {
-    default = ""
+    default = "/Users/patrick/.ssh/gce_private_key.pem"
     description = "Path to SSH private key in order to connect to instances"
 }
 variable "org" {
-    default = ""
+    default = "PatrickSchulz"
     description = "CRDB Enterprise license org."
 }
 variable "license" {
-    default = ""
+    default = "crl-0-EPC5w44GGAIiDVBhdHJpY2tTY2h1bHo"
     description = "CRDB Enterprise license"
 }
 variable "vault_version" {
@@ -58,6 +58,6 @@ variable "vault_version" {
     description = "HashiCorp Vault Agent version to be downloaded"
 }
 variable "vault_addr" {
-    default = ""
+    default = "https://crdb.vault.11eb0fea-f619-3fcf-8aa6-0242ac110005.aws.hashicorp.cloud:8200"
     description = "HashiCorp Vault address"
 }
